@@ -77,11 +77,6 @@ struct OnboardingView: View {
                     }
                 }) {
                     Text(currentPage < pages.count - 1 ? "Next" : "Get Started")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 200, height: 50)
-                        .background(Color.green)
-                        .cornerRadius(10)
                 }
                 .buttonStyle(PrimaryButtonStyle(backgroundColor: .green))
                 .padding(.bottom, 50)
