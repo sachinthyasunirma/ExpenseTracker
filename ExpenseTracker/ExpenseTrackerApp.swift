@@ -6,40 +6,20 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct ExpenseTrackerApp: App {
     @AppStorage("isOnboardingCompleted") var isOnboardingCompleted: Bool = false
-    let modelContainer : ModelContainer;
-    
-    init() {
-        do{
-            let schema = Schema([])
-            let modelConfiguration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                allowsSave: true
-            )
-            
-            modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [modelConfiguration]
-            )
-            
-        }catch{
-            fatalError(error.localizedDescription)
-        }
-        
-    }
+    let modelContainer = CoreDataService.shared;
     
     var body: some Scene {
         WindowGroup {
             if !isOnboardingCompleted {
                 OnboardingView(isOnboardingCompleted : $isOnboardingCompleted)
+                    .environment(\.managedObjectContext, modelContainer.context)
             }else{
                 ContentView()
             }
-        }.modelContainer(modelContainer)
+        }
     }
 }
