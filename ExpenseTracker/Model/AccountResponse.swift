@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Account: Identifiable, Codable {
+struct AccountResponse: Identifiable, Codable {
     var id: UUID
     var name: String
     var type: AccountType
@@ -27,11 +27,6 @@ struct Account: Identifiable, Codable {
         self.currentBalance = initialBalance
         self.isActive = true
         self.createdAt = Date()
-        self.updatedAt = Date()
-    }
-    
-    mutating func updateBalance(_ amount: Decimal) {
-        self.currentBalance += amount
         self.updatedAt = Date()
     }
 }

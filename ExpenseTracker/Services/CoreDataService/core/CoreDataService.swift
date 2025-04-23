@@ -10,15 +10,6 @@ import CoreData
 
 class CoreDataService {
     static let shared = CoreDataService()
-//    private init() {
-//        persistentContainer = NSPersistentContainer(name: "ExpenseTrackerModel")
-//        persistentContainer.loadPersistentStores { description, error in
-//            if let error = error {
-//                fatalError("Core Data store failed to load: \(error)")
-//            }
-//        }
-//        persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
-//    }
     private init() {}
     
     lazy var persistentContainer: NSPersistentContainer = {
