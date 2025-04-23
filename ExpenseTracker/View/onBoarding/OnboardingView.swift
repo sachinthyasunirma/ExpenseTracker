@@ -19,7 +19,6 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-//            Color.blue.opacity(0.1).ignoresSafeArea()
             
             VStack {
                 // Skip button
@@ -30,6 +29,7 @@ struct OnboardingView: View {
                             isOnboardingCompleted = true
                         }
                     }
+                    .foregroundStyle(.green)
                     .padding()
                 }
                 
@@ -39,7 +39,7 @@ struct OnboardingView: View {
                             Image(pages[index].imageName)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 150, height: 150)
+                                .frame(width: 350, height: 350)
                                 .foregroundColor(.blue)
                                 .padding()
                             
@@ -60,7 +60,11 @@ struct OnboardingView: View {
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
-
+                .onAppear{
+                    UIPageControl.appearance().currentPageIndicatorTintColor = .green
+                    UIPageControl.appearance().pageIndicatorTintColor = .gray
+                }
+                
                 Button(action: {
                     if currentPage < pages.count - 1 {
                         withAnimation {
@@ -73,12 +77,8 @@ struct OnboardingView: View {
                     }
                 }) {
                     Text(currentPage < pages.count - 1 ? "Next" : "Get Started")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 200, height: 50)
-                        .background(Color.blue)
-                        .cornerRadius(10)
                 }
+                .buttonStyle(PrimaryButtonStyle(backgroundColor: .green))
                 .padding(.bottom, 50)
             }
         }
