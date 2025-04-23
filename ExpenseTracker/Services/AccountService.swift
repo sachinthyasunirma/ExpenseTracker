@@ -21,9 +21,9 @@ protocol AccountService {
     func updateAccountType(_ id: UUID, newType: String) async throws
     
     func deleteAccount(_ id: UUID) async throws
-    func deactivateAccount(_ id: UUID) async throws
+    func deactivateAccount(_ id: UUID, isActive: Bool) async throws
     
-    func getAccountBalance(_ id: UUID) async throws -> Double
+    func getAccountBalance(_ id: UUID) async throws -> Decimal
     func adjustAccountBalance(_ id: UUID, amount: Double) async throws
     func transferFunds(from sourceId: UUID,
                        to destinationId: UUID,
@@ -31,7 +31,7 @@ protocol AccountService {
 }
 
 class DefaultAccountService : AccountService {
-    
+
     private let accountRepository: AccountRepository
     
     init(accountRepository: AccountRepository) {
@@ -78,14 +78,14 @@ class DefaultAccountService : AccountService {
         guard !id.uuidString.isEmpty else {
             throw AccountError.invalidAccount
         }
-        return try await accountRepository.deleteAccount(account: try await getAccount(byId: id))
+        try await accountRepository.deleteAccount(account: try await getAccount(byId: id))
     }
     
     func deactivateAccount(_ id: UUID, isActive: Bool) async throws {
         guard !id.uuidString.isEmpty else {
             throw AccountError.invalidAccount
         }
-        return try await accountRepository.updateAccountStatus(id: id, isActive: isActive)
+        try await accountRepository.updateAccountStatus(id: id, isActive: isActive)
     }
     
     func getAccountBalance(_ id: UUID) async throws -> Decimal {
