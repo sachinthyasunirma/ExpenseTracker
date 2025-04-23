@@ -8,32 +8,26 @@
 import Foundation
 import CoreData
 
-class CoreDataService {
+final class CoreDataService {
     static let shared = CoreDataService()
-    private init() {}
-    
-    lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "ExpenseTrackerModel")
-        container.loadPersistentStores { description, error in
-            if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+
+    let container: NSPersistentContainer
+    var context: NSManagedObjectContext {
+        container.viewContext
+    }
+
+    private init() {
+        container = NSPersistentContainer(name: "ExpenseTrackerModel")
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Core Data failed to load: \(error.localizedDescription)")
             }
         }
-        return container
-    }()
-    
-    var context: NSManagedObjectContext {
-        return persistentContainer.viewContext
     }
-    
-    func saveContext() {
+
+    func saveContext() throws {
         if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
+            try context.save()
         }
     }
 }
