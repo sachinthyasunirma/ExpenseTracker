@@ -17,17 +17,17 @@ protocol AccountService {
     func getActiveAccounts() async throws -> [Account]
     func getAccount(byId id: UUID) async throws -> Account
     
-    func updateAccountName(_ id: UUID, newName: String) async throws
-    func updateAccountType(_ id: UUID, newType: String) async throws
-    
+//    func updateAccountName(_ id: UUID, newName: String) async throws
+//    func updateAccountType(_ id: UUID, newType: String) async throws
+//    
     func deleteAccount(_ id: UUID) async throws
     func deactivateAccount(_ id: UUID, isActive: Bool) async throws
     
     func getAccountBalance(_ id: UUID) async throws -> Decimal
-    func adjustAccountBalance(_ id: UUID, amount: Double) async throws
-    func transferFunds(from sourceId: UUID,
-                       to destinationId: UUID,
-                       amount: Double) async throws
+//    func adjustAccountBalance(_ id: UUID, amount: Double) async throws
+//    func transferFunds(from sourceId: UUID,
+//                       to destinationId: UUID,
+//                       amount: Double) async throws
 }
 
 class DefaultAccountService : AccountService {
@@ -66,13 +66,13 @@ class DefaultAccountService : AccountService {
         return try await accountRepository.fetchAccount(id: id)!
     }
     
-    func updateAccountName(_ id: UUID, newName: String) async throws {
-        <#code#>
-    }
-    
-    func updateAccountType(_ id: UUID, newType: String) async throws {
-        <#code#>
-    }
+//    func updateAccountName(_ id: UUID, newName: String) async throws {
+//        <#code#>
+//    }
+//    
+//    func updateAccountType(_ id: UUID, newType: String) async throws {
+//        <#code#>
+//    }
     
     func deleteAccount(_ id: UUID) async throws {
         guard !id.uuidString.isEmpty else {
@@ -95,13 +95,13 @@ class DefaultAccountService : AccountService {
         return try await accountRepository.fetchCurrentBalance(for: id)
     }
     
-    func adjustAccountBalance(_ id: UUID, amount: Double) async throws {
-        <#code#>
-    }
-    
-    func transferFunds(from sourceId: UUID, to destinationId: UUID, amount: Double) async throws {
-        <#code#>
-    }
+//    func adjustAccountBalance(_ id: UUID, amount: Double) async throws {
+//        <#code#>
+//    }
+//    
+//    func transferFunds(from sourceId: UUID, to destinationId: UUID, amount: Double) async throws {
+//        <#code#>
+//    }
     
     
 }

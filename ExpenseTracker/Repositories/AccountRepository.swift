@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 
 class AccountRepository: ObservableObject {
-    private let context = CoreDataService.shared.context;
+    private var context = CoreDataService.shared.context;
     
     init(context: NSManagedObjectContext) {
         self.context = context
