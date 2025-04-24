@@ -17,7 +17,7 @@ struct AccountView: View {
     @State private var initialBalance: String = "0.00"
     
     let accountTypes = ["Checking", "Savings", "Credit Card", "Cash", "Investment", "Expense"]
-    let currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"]
+    let currencies = ["LKR","USD", "EUR", "GBP", "JPY", "CAD", "AUD"]
     
     var body: some View {
         NavigationView {
@@ -77,6 +77,7 @@ struct AccountView: View {
             )
             
             if viewModel.errorMessage == nil {
+                try await viewModel.loadAccounts()
                 dismiss()
             }
         }
