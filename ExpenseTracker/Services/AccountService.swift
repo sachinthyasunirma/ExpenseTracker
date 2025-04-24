@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import CoreData
 
 protocol AccountService {
     func createNewAccount(name: String,
                           type: String,
                           currency: String,
-                          initialBalance: Double) async throws -> Account
+                          initialBalance: Decimal) async throws -> Account
     
     func getAllAccounts() async throws -> [Account]
     func getActiveAccounts() async throws -> [Account]
@@ -32,13 +33,13 @@ protocol AccountService {
 
 class DefaultAccountService : AccountService {
 
-    private let accountRepository: AccountRepository
+    private let accountRepository: AccountRepositoryProtocol
     
-    init(accountRepository: AccountRepository) {
+    init(accountRepository: AccountRepositoryProtocol = AccountRepository()) {
         self.accountRepository = accountRepository
     }
     
-    func createNewAccount(name: String, type: String, currency: String, initialBalance: Double) async throws -> Account {
+    func createNewAccount(name: String, type: String, currency: String, initialBalance: Decimal) async throws -> Account {
         guard !name.isEmpty else {
             throw AccountError.invalidAccount
         }
@@ -47,7 +48,7 @@ class DefaultAccountService : AccountService {
             throw AccountError.invalidAccount
         }
         
-        return try await accountRepository.saveAccount(name: name, type: type, currency: currency, initialBalance: Decimal(initialBalance))
+        return try await accountRepository.saveAccount(name: name, type: type, currency: currency, initialBalance: initialBalance)
         
     }
     

@@ -8,10 +8,22 @@
 import Foundation
 import CoreData
 
-class AccountRepository: ObservableObject {
-    private var context = CoreDataService.shared.context;
+protocol AccountRepositoryProtocol {
+    func fetchAccounts() async throws -> [Account]
+    func saveAccount(name: String, type: String, currency: String, initialBalance: Decimal) async throws -> Account
+    func fetchActiveAccounts() async throws -> [Account]
+    func fetchAccount(id: UUID) async throws -> Account?
+    func updateAccount(account: Account) async throws
+    func fetchCurrentBalance(for id: UUID) async throws -> Decimal
+    func deleteAccount(account: Account) async throws
+    func updateAccountStatus(id: UUID, isActive: Bool) async throws
+}
+
+class AccountRepository: AccountRepositoryProtocol {
     
-    init(context: NSManagedObjectContext) {
+    private let context: NSManagedObjectContext
+    
+    init(context: NSManagedObjectContext = CoreDataService.shared.context) {
         self.context = context
     }
     
@@ -73,7 +85,7 @@ class AccountRepository: ObservableObject {
     }
     
     func updateAccountStatus(id: UUID, isActive: Bool) async throws {
-        guard var account = try await fetchAccount(id: id) else {
+        guard let account = try await fetchAccount(id: id) else {
             throw AccountError.accountNotFound
         }
         account.isActive = isActive
