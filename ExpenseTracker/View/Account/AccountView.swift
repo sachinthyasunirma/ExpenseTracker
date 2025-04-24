@@ -12,8 +12,8 @@ struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var name: String = ""
-    @State private var type: String = "Checking"
-    @State private var currency: String = "USD"
+    @State private var type: String = "Savings"
+    @State private var currency: String = "LKR"
     @State private var initialBalance: String = "0.00"
     
     let accountTypes = ["Checking", "Savings", "Credit Card", "Cash", "Investment", "Expense"]
@@ -30,7 +30,6 @@ struct AccountView: View {
                             Text($0)
                         }
                     }
-                    
                     Picker("Currency", selection: $currency) {
                         ForEach(currencies, id: \.self) {
                             Text($0)

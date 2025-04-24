@@ -23,17 +23,18 @@ struct AccountListView: View {
                     ProgressView("Loading...")
                 } else if viewModel.accounts.isEmpty {
                     VStack {
+                        Spacer()
                         Text("No accounts yet")
                             .font(.headline)
-                        
+                        Spacer()
                         Button("Add Your First Account") {
                             showingAddSheet = true
-                        }
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                        .padding(.top, 8)
+                        }.buttonStyle(PrimaryButtonStyle(backgroundColor: .blue))
+//                        .padding()
+//                        .foregroundColor(.white)
+//                        .background(Color.blue)
+//                        .cornerRadius(10)
+//                        .padding(.top, 8)
                     }
                 } else {
                     List {
