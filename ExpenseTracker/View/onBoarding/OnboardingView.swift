@@ -19,7 +19,6 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            
             VStack {
                 // Skip button
                 HStack {
