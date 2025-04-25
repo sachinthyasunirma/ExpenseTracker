@@ -24,7 +24,7 @@ struct ExpenseTrackerApp: App {
                 }
             }else{
                 withAnimation{
-                    HomeView()
+                    AccountListView()
                 }
             }
         }

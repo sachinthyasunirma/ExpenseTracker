@@ -10,39 +10,71 @@ import SwiftUI
 struct AccountRowView: View {
     let account: Account
     
+    // Icons for different account types
+    private let accountTypeIcons: [String: String] = [
+        "Checking": "creditcard",
+        "Savings": "banknote",
+        "Credit Card": "creditcard.fill",
+        "Cash": "dollarsign.circle",
+        "Investment": "chart.line.uptrend.xyaxis",
+        "Expense": "cart"
+    ]
+    
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
+        HStack(spacing: 16) {
+            // Account type icon
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "E8F5F0"))
+                    .frame(width: 50, height: 50)
+                
+                Image(systemName: accountTypeIcons[account.type ?? ""] ?? "dollarsign.circle")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(hex: "45A87E"))
+            }
+            
+            // Account details
+            VStack(alignment: .leading, spacing: 4) {
                 Text(account.name ?? "Unnamed Account")
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold))
+                
                 Text(account.type ?? "")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 13))
+                    .foregroundColor(.gray)
             }
             
             Spacer()
             
-            VStack(alignment: .trailing) {
+            // Balance and status
+            VStack(alignment: .trailing, spacing: 4) {
                 Text(formatCurrency(account.currentBalance as Decimal? ?? 0, currency: account.currency ?? "USD"))
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(getCurrencyColor(account.currentBalance as Decimal? ?? 0))
                 
-                if account.isActive {
-                    Text("Active")
-                        .font(.caption)
-                        .padding(4)
-                        .background(Color.green.opacity(0.2))
-                        .cornerRadius(4)
-                } else {
-                    Text("Inactive")
-                        .font(.caption)
-                        .padding(4)
-                        .background(Color.red.opacity(0.2))
-                        .cornerRadius(4)
+                // Status indicator
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(account.isActive ? Color.green : Color.red)
+                        .frame(width: 6, height: 6)
+                    
+                    Text(account.isActive ? "Active" : "Inactive")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(
+            color: Color.black.opacity(0.05),
+            radius: 8,
+            x: 0,
+            y: 2
+        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
     
     func formatCurrency(_ amount: Decimal, currency: String) -> String {
@@ -54,11 +86,11 @@ struct AccountRowView: View {
     
     func getCurrencyColor(_ amount: Decimal) -> Color {
         if amount < 0 {
-            return .red
+            return Color(hex: "E74C3C") // Custom red
         } else if amount == 0 {
-            return .gray
+            return Color.gray
         } else {
-            return .green
+            return Color(hex: "45A87E") // Custom green
         }
     }
 }
@@ -66,5 +98,7 @@ struct AccountRowView: View {
 #Preview {
     let context = CoreDataService.shared.container.viewContext
     let account = Account.previewAccount(context: context)
-    AccountRowView(account: account)
+    return AccountRowView(account: account)
+        .padding()
+        .background(Color(hex: "F5F7FA"))
 }
