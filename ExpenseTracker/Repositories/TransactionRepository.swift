@@ -13,8 +13,8 @@ protocol TransactionProtocol {
     func fetchTransaction(id: UUID) async throws -> Transaction?
     func createTransaction(_ transaction: TransactionDTO) async throws
     func deleteTransaction(transaction: Transaction) async throws
+    func updateTransactionById(transactionId: UUID) async throws
     func updateTransaction(_ transaction: Transaction) async throws
-    
     
     //Analytics operations
     func fetchTransactionsByAccountAndDateRange(accountId: UUID, startDate: Date, endDate: Date) async throws -> [Transaction]
@@ -132,16 +132,18 @@ class TransactionRepository: TransactionProtocol {
         }
     }
     
-    func updateTransaction(transactionId: UUID) async throws {
+    func updateTransactionById(transactionId: UUID) async throws {
         guard let transaction = try await fetchTransaction(id: transactionId) else {
             throw TransactionError.transactionNotFound
         }
+        transaction.status = false
+        try await updateTransaction(transaction)
     }
     
     func updateTransaction(_ transaction: Transaction) async throws {
         transaction.updatedAt = Date()
         try await context.perform {
-            try self try context.save()
+            try self.context.save()
         }
     }
 }
