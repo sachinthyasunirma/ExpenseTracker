@@ -100,8 +100,13 @@ class AccountRepository: AccountRepositoryProtocol {
     }
 }
 
-enum AccountError : Error {
+enum AccountError: Error, Equatable {
     case accountNotFound
-    case insufficientFunds
-    case invalidAccount
+    case accountNotSelected
+    case invalidAmount
+    case networkError(String)
+    case unknownError
+    case creationFailed
+    case deletionFailed
+    case updateFailed
 }

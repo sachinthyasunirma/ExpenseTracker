@@ -1,45 +1,50 @@
 //
-//  AccountListView.swift
+//  TransactionListView.swift
 //  ExpenseTracker
 //
-//  Created by sachinthya sunirma rathnavibushana on 2025-04-22.
+//  Created by sachinthya sunirma rathnavibushana on 2025-05-04.
 //
 
 import SwiftUI
 
-struct AccountListView: View {
-    @EnvironmentObject private var viewModel: AccountViewModel
+struct TransactionListView: View {
+    @StateObject private var viewModel: TransactionViewModel
     @State private var showingAddSheet = false
     @State private var showAlert = false
     @State private var selectedTab = "All"
+    @EnvironmentObject private var accountViewModel: AccountViewModel
     
-    private let tabs = ["All", "Active", "Inactive"]
+    private let tabs = ["All", "Income", "Expense"]
     
-    var filteredAccounts: [Account] {
+    init(accountId: UUID, transactionService: TransactionServiceProtocol = TransactionService()) {
+        _viewModel = StateObject(wrappedValue: TransactionViewModel(accountId: accountId, service: transactionService))
+    }
+    
+    var filteredTransactions: [Transaction] {
         switch selectedTab {
-        case "Active":
-            return viewModel.accounts.filter { $0.isActive }
-        case "Inactive":
-            return viewModel.accounts.filter { !$0.isActive }
+        case "Income":
+            return viewModel.transactions.filter { $0.isIncome }
+        case "Expense":
+            return viewModel.transactions.filter { !$0.isIncome }
         default:
-            return viewModel.accounts
+            return viewModel.transactions
         }
     }
     
-    var totalBalance: String {
-        let total = viewModel.accounts
-            .compactMap { $0.isActive ? $0.currentBalance as Decimal? : nil }
+    var totalAmount: String {
+        let total = viewModel.transactions
+            .compactMap { $0.amount?.decimalValue }
             .reduce(0, +)
         
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = viewModel.accounts[0].currency
-        return formatter.string(from: total as NSNumber) ?? "USD \(total)"
+        formatter.currencyCode = "USD" // Or use the account's currency
+        return formatter.string(from: total as NSNumber) ?? "$\(total)"
     }
     
     var body: some View {
         ZStack {
-            // Background color
+            // Background color - matching AccountListView
             Color(hex: "F5F7FA")
                 .ignoresSafeArea()
             
@@ -47,13 +52,13 @@ struct AccountListView: View {
                 // Custom header
                 headerView
                 
-                // Balance summary card
-                if !viewModel.accounts.isEmpty {
-                    balanceSummaryView
+                // Total summary card
+                if !viewModel.transactions.isEmpty {
+                    totalSummaryView
                 }
                 
                 // Tab selector
-                if !viewModel.accounts.isEmpty {
+                if !viewModel.transactions.isEmpty {
                     tabSelectorView
                 }
                 
@@ -63,36 +68,55 @@ struct AccountListView: View {
                         ProgressView()
                             .scaleEffect(1.5)
                             .padding()
-                    } else if viewModel.accounts.isEmpty {
+                    } else if viewModel.transactions.isEmpty {
                         emptyStateView
                     } else {
-                        accountListView
+                        transactionListView
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .sheet(isPresented: $showingAddSheet) {
-            AccountView(viewModel: viewModel)
+            //                AddTransactionView(viewModel: viewModel)
         }
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("Error"),
-                //                message: Text(viewModel.errorMessage ?? "An error occurred"),
+                message: Text(viewModel.errorMessage ?? "An error occurred"),
                 dismissButton: .default(Text("OK"))
             )
         }
         .task {
-            try! await viewModel.loadAccounts()
+            await viewModel.loadTransactions()
+            await loadData()
         }
         .onChange(of: viewModel.errorMessage) { newValue in
             showAlert = newValue != nil
         }
     }
     
+    private func loadData() async {
+        do {
+            // Print selected account details
+            print(accountViewModel.selectedAccount)
+            if let account = accountViewModel.selectedAccount {
+                print("Selected Account after load:")
+                print("Name: \(account.name ?? "N/A")")
+                print("Balance: \(account.currentBalance?.formattedCurrency(currencyCode: account.currency ?? "USD") ?? "N/A")")
+                print("Currency: \(account.currency ?? "N/A")")
+                print("ID: \(account.id?.uuidString ?? "N/A")")
+            } else {
+                print("No account selected after load")
+            }
+        } catch {
+            print("Error loading accounts: \(error)")
+        }
+    }
+    
     private var headerView: some View {
         HStack {
-            Text("Accounts")
+            Text("Transactions")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.black)
             
@@ -114,14 +138,14 @@ struct AccountListView: View {
         .padding(.bottom, 16)
     }
     
-    private var balanceSummaryView: some View {
+    private var totalSummaryView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Total Balance")
+            Text("Total Amount")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.black)
             
             HStack(alignment: .firstTextBaseline) {
-                Text(totalBalance)
+                Text(totalAmount)
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.black)
             }
@@ -170,18 +194,18 @@ struct AccountListView: View {
         VStack {
             Spacer()
             
-            Image(systemName: "creditcard.fill")
+            Image(systemName: "list.bullet")
                 .font(.system(size: 60))
                 .foregroundColor(Color(hex: "E8F5F0"))
                 .padding()
             
-            Text("No accounts yet")
+            Text("No transactions yet")
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
                 .padding(.bottom, 8)
             
-            Text("Add your first account to start tracking your finances")
+            Text("Add your first transaction to start tracking your finances")
                 .font(.body)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
@@ -191,7 +215,7 @@ struct AccountListView: View {
             Button(action: {
                 showingAddSheet = true
             }) {
-                Text("Add Your First Account")
+                Text("Add Your First Transaction")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -205,72 +229,74 @@ struct AccountListView: View {
         }
     }
     
-    private var accountListView: some View {
+    private var transactionListView: some View {
         ScrollView {
             LazyVStack(spacing: 8) {
-                if filteredAccounts.isEmpty {
-                    Text("No \(selectedTab.lowercased()) accounts")
+                if filteredTransactions.isEmpty {
+                    Text("No \(selectedTab.lowercased()) transactions")
                         .font(.system(size: 16))
                         .foregroundColor(.gray)
                         .padding(.top, 40)
                 } else {
-                    ForEach(filteredAccounts, id: \.id) { account in
-                        NavigationLink(destination: AccountDetailView(account: account, viewModel: viewModel)) {
-                            AccountRowView(account: account)
-                        }
-                        //                        .buttonStyle(PlainButtonStyle())
-                        .contextMenu {
-                            Button(role: .destructive, action: {
-                                deleteAccount(account)
-                            }) {
-                                Label("Delete", systemImage: "trash")
+                    ForEach(filteredTransactions, id: \.id) { transaction in
+                        TransactionRowView(transaction: transaction)
+                            .contextMenu {
+                                Button(role: .destructive, action: {
+                                    deleteTransaction(transaction)
+                                }) {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
                     }
                 }
             }
             .padding(.vertical, 12)
+            .padding(.horizontal, 20)
         }
     }
     
-    private func actionButton(icon: String, label: String) -> some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: "E8F5F0"))
-                    .frame(width: 40, height: 40)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(Color(hex: "45A87E"))
-            }
-            
-            Text(label)
-                .font(.system(size: 12))
-                .foregroundColor(.gray)
-        }
-    }
-    
-    private func deleteAccount(_ account: Account) {
+    private func deleteTransaction(_ transaction: Transaction) {
         Task {
-            if let id = account.id {
-                try await viewModel.deleteAccount(id: id)
-            }
-        }
-    }
-    
-    func deleteAccounts(at offsets: IndexSet) {
-        Task {
-            for index in offsets {
-                if let id = viewModel.accounts[index].id {
-                    try await viewModel.deleteAccount(id: id)
-                }
+            if let id = transaction.id {
+                await viewModel.deleteTransaction(transaction)
             }
         }
     }
 }
 
+struct TransactionRowView: View {
+    let transaction: Transaction
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.desc ?? "No description")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.black)
+                
+                Text(transaction.merchantName ?? "Unknown merchant")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+                
+                Text(transaction.date?.formatted(date: .abbreviated, time: .omitted) ?? "")
+                    .font(.system(size: 12))
+                    .foregroundColor(.gray)
+            }
+            
+            Spacer()
+            
+            Text(transaction.amount?.decimalValue.formatted(.currency(code: transaction.currencyCode ?? "USD")) ?? "")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(transaction.isIncome ? Color(hex: "45A87E") : .red)
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+}
 
 #Preview {
-    AccountListView().environmentObject(AccountViewModel(accountService: DefaultAccountService()))
+    TransactionListView(accountId: UUID())
+        .environment(\.managedObjectContext, CoreDataService.shared.context).environmentObject(AccountViewModel(accountService: DefaultAccountService()))
 }
