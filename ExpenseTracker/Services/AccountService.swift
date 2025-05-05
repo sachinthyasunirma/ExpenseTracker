@@ -41,11 +41,11 @@ class DefaultAccountService : AccountService {
     
     func createNewAccount(name: String, type: String, currency: String, initialBalance: Decimal) async throws -> Account {
         guard !name.isEmpty else {
-            throw AccountError.invalidAccount
+            throw AccountError.accountNotFound
         }
         
         guard initialBalance >= 0 else {
-            throw AccountError.invalidAccount
+            throw AccountError.invalidAmount
         }
         
         return try await accountRepository.saveAccount(name: name, type: type, currency: currency, initialBalance: initialBalance)
@@ -62,7 +62,7 @@ class DefaultAccountService : AccountService {
     
     func getAccount(byId id: UUID) async throws -> Account {
         guard !id.uuidString.isEmpty else {
-            throw AccountError.invalidAccount
+            throw AccountError.accountNotFound
         }
         return try await accountRepository.fetchAccount(id: id)!
     }
@@ -77,21 +77,21 @@ class DefaultAccountService : AccountService {
     
     func deleteAccount(_ id: UUID) async throws {
         guard !id.uuidString.isEmpty else {
-            throw AccountError.invalidAccount
+            throw AccountError.accountNotFound
         }
         try await accountRepository.deleteAccount(account: try await getAccount(byId: id))
     }
     
     func deactivateAccount(_ id: UUID, isActive: Bool) async throws {
         guard !id.uuidString.isEmpty else {
-            throw AccountError.invalidAccount
+            throw AccountError.accountNotFound
         }
         try await accountRepository.updateAccountStatus(id: id, isActive: isActive)
     }
     
     func getAccountBalance(_ id: UUID) async throws -> Decimal {
         guard !id.uuidString.isEmpty else {
-            throw AccountError.invalidAccount
+            throw AccountError.accountNotFound
         }
         return try await accountRepository.fetchCurrentBalance(for: id)
     }
