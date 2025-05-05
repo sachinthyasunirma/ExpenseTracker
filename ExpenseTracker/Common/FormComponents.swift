@@ -9,6 +9,34 @@ import SwiftUI
 
 struct FormComponents {
     
+    static func customPicker(title: String, selection: Binding<String>, options: [String]) -> some View {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.gray)
+                
+                Menu {
+                    Picker(selection: selection, label: EmptyView()) {
+                        ForEach(options, id: \.self) { option in
+                            Text(option).tag(option)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(selection.wrappedValue)
+                            .font(.system(size: 16))
+                            .foregroundColor(.black)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(.gray)
+                    }
+                    .padding(16)
+                    .background(Color(hex: "F5F5F5"))
+                    .cornerRadius(12)
+                }
+            }
+        }
+    
     static func cardPreviewView(
             name: String,
             balance: String,

@@ -22,7 +22,6 @@ class AccountViewModel: ObservableObject {
         setupAccountSelection()
     }
     
-    // MARK: - Account Selection Management
     private func setupAccountSelection() {
         $accounts
             .sink { [weak self] accounts in
@@ -41,7 +40,6 @@ class AccountViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    // MARK: - Account Operations
     @MainActor
     func loadAccounts() async {
         isLoading = true
@@ -122,7 +120,6 @@ class AccountViewModel: ObservableObject {
         isLoading = false
     }
     
-    // MARK: - Helpers
     func getAccountById(_ id: UUID) -> Account? {
         accounts.first { $0.id == id }
     }
