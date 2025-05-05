@@ -78,7 +78,7 @@ struct TransactionListView: View {
             }
         }
         .sheet(isPresented: $showingAddSheet) {
-            //                AddTransactionView(viewModel: viewModel)
+                            AddTransactionView(viewModel: viewModel)
         }
         .alert(isPresented: $showAlert) {
             Alert(
