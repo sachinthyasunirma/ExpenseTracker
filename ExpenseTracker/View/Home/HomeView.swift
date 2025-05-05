@@ -12,6 +12,7 @@ struct HomeView: View {
     @EnvironmentObject private var accountViewModel: AccountViewModel
     @State private var showingAccountPicker = false
     @State private var showingAddTransaction = false
+    @State private var showingSettings = false
     
     var body: some View {
         NavigationView {
@@ -70,6 +71,9 @@ struct HomeView: View {
 //                    AddTransactionView(accountId: selectedAccount.id ?? UUID())
                 }
             }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
+            }
         }
     }
     
@@ -123,12 +127,14 @@ struct HomeView: View {
             
             Spacer()
             
-            Image(systemName: "bell.fill")
-                .font(.system(size: 20))
-                .foregroundColor(Color(hex: "45A87E"))
-                .frame(width: 40, height: 40)
-                .background(Color(hex: "E8F5F0"))
-                .clipShape(Circle())
+            Button(action: { showingSettings = true } ){
+                Image(systemName: "gearshape")
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(hex: "45A87E"))
+                    .frame(width: 40, height: 40)
+                    .background(Color(hex: "E8F5F0"))
+                    .clipShape(Circle())
+            }
         }
     }
     

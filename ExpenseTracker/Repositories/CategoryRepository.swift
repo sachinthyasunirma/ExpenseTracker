@@ -35,18 +35,7 @@ class CategoryRepository : CategoryRepositoryProtocol {
         }
     }
     
-    func saveCategory(_ category: Category)async throws {
-        let category = Category(context: context)
-        category.id = UUID()
-        category.name = category.name
-        category.budgetLimit = category.budgetLimit
-        category.color = category.color
-        category.type = category.type
-        category.icon = category.icon
-        category.isActive = true
-        category.createdAt = Date()
-        category.updatedAt = Date()
-        
+    func saveCategory(_ category: Category) async throws {
         try await context.perform {
             try self.context.save()
         }
