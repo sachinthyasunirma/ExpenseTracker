@@ -64,8 +64,6 @@ struct AddTransactionView: View {
         .navigationBarHidden(true)
     }
     
-    // MARK: - Subviews
-    
     private var loadingView: some View {
         ProgressView("Loading Categories...")
             .padding()
@@ -210,8 +208,6 @@ struct AddTransactionView: View {
                     .tint(.white)
             )
     }
-    
-    // MARK: - Helper Functions
     
     private func saveTransaction() {
         guard let categoryId = selectedCategoryId else { return }
