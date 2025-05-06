@@ -152,3 +152,9 @@ class TransactionRepository: TransactionProtocol {
 enum TransactionError : Error {
     case transactionNotFound
 }
+
+enum EntryPoint {
+    case expense
+    case income
+    case general
+}

@@ -10,7 +10,9 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var categoryViewModel = CategoryViewModel()
+    @StateObject private var accountViewModel = AccountViewModel()
     @State private var showingAddCategory = false
+    @State private var showingAddAccount = false
     @State private var newCategoryName = ""
     @State private var newCategoryColor = Color.blue
     @State private var selectedIcon = "cart"
@@ -27,6 +29,7 @@ struct SettingsView: View {
         NavigationView {
             List {
                 categoriesSection
+                accountSection
                 appSettingsSection
                 aboutSection
             }
@@ -38,8 +41,12 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAddCategory) {
                 AddCategoryView(viewModel: categoryViewModel)
             }
+            .sheet(isPresented: $showingAddAccount){
+                AccountListView()
+            }
             .task {
                 await categoryViewModel.loadCategories()
+                await accountViewModel.loadAccounts()
             }
         }
     }
@@ -53,6 +60,17 @@ struct SettingsView: View {
             .onDelete(perform: deleteCategory)
             
             addCategoryButton
+        }
+    }
+    
+    private var accountSection: some View {
+        Section(header: Text("Accounts")) {
+            ForEach(accountViewModel.accounts) { account in
+                accountRow(account)
+            }
+            .onDelete(perform: deleteAccount)
+            
+            addAccountButton
         }
     }
     
@@ -74,6 +92,13 @@ struct SettingsView: View {
         }
     }
     
+    private func accountRow(_ account: Account) -> some View {
+        HStack {
+            Text(account.name ?? "Unknown")
+            Spacer()
+        }
+    }
+    
     
     private func categoryRow(_ category: Category) -> some View {
         HStack {
@@ -91,6 +116,16 @@ struct SettingsView: View {
                 Image(systemName: "plus.circle.fill")
                     .foregroundColor(.green)
                 Text("Add New Category")
+            }
+        }
+    }
+    
+    private var addAccountButton: some View {
+        Button(action: { showingAddAccount = true }) {
+            HStack {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundColor(.green)
+                Text("Add New Account")
             }
         }
     }
@@ -133,6 +168,15 @@ struct SettingsView: View {
         Button("Cancel") {
             showingAddCategory = false
             newCategoryName = ""
+        }
+    }
+    
+    private func deleteAccount(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let account = accountViewModel.accounts[index]
+            Task {
+                await accountViewModel.deleteAccount(id: account.id!)
+            }
         }
     }
     

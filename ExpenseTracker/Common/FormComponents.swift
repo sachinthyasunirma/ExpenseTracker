@@ -10,68 +10,68 @@ import SwiftUI
 struct FormComponents {
     
     static func customPicker(title: String, selection: Binding<String>, options: [String]) -> some View {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray)
-                
-                Menu {
-                    Picker(selection: selection, label: EmptyView()) {
-                        ForEach(options, id: \.self) { option in
-                            Text(option).tag(option)
-                        }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.gray)
+            
+            Menu {
+                Picker(selection: selection, label: EmptyView()) {
+                    ForEach(options, id: \.self) { option in
+                        Text(option).tag(option)
                     }
-                } label: {
-                    HStack {
-                        Text(selection.wrappedValue)
-                            .font(.system(size: 16))
-                            .foregroundColor(.black)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .foregroundColor(.gray)
-                    }
-                    .padding(16)
-                    .background(Color(hex: "F5F5F5"))
-                    .cornerRadius(12)
                 }
+            } label: {
+                HStack {
+                    Text(selection.wrappedValue)
+                        .font(.system(size: 16))
+                        .foregroundColor(.black)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(.gray)
+                }
+                .padding(16)
+                .background(Color(hex: "F5F5F5"))
+                .cornerRadius(12)
             }
         }
+    }
     
     static func cardPreviewView(
-            name: String,
-            balance: String,
-            currency: String,
-            formatCurrency: (String) -> String
-        ) -> some View {
-            VStack(alignment: .leading, spacing: 5) {
-                // Card title
-                Text(name.isEmpty ? "New Account" : name)
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.black)
+        name: String,
+        balance: String,
+        currency: String,
+        formatCurrency: (String) -> String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            // Card title
+            Text(name.isEmpty ? "New Account" : name)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.black)
+            
+            // Card balance
+            HStack(alignment: .bottom, spacing: 2) {
+                Text(formatCurrency(balance))
+                    .font(.system(size: 26, weight: .bold))
                 
-                // Card balance
-                HStack(alignment: .bottom, spacing: 2) {
-                    Text(formatCurrency(balance))
-                        .font(.system(size: 26, weight: .bold))
-                    
-                    Text(currency)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 5)
-                }
-                
-                Spacer()
+                Text(currency)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 5)
             }
-            .padding(24)
-            .frame(height: 80)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(hex: "cdf2e5"))
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-            )
-            .padding(.top, 20)
+            
+            Spacer()
         }
+        .padding(24)
+        .frame(height: 80)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(hex: "cdf2e5"))
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .padding(.top, 20)
+    }
     
     static func headerView(title: String, dismiss: @escaping () -> Void) -> some View {
         HStack {
@@ -118,17 +118,24 @@ struct FormComponents {
         }
     }
     
-    static func inputField(title: String, text: Binding<String>, placeholder: String) -> some View {
+    static func inputField(
+        title: String,
+        text: Binding<String>,
+        placeholder: String,
+        isDisabled: Bool = false
+    ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray)
+                .foregroundColor(isDisabled ? Color.gray.opacity(0.5) : .gray)
             
             TextField(placeholder, text: text)
                 .font(.system(size: 17))
                 .padding(16)
                 .background(Color(hex: "F5F5F5"))
                 .cornerRadius(12)
+                .disabled(isDisabled)
+                .opacity(isDisabled ? 0.7 : 1)
         }
     }
     
