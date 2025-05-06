@@ -8,7 +8,7 @@
 // 1. Budget.swift (Model)
 import Foundation
 
-struct Budget: Identifiable, Codable {
+struct BudgetDTO: Identifiable, Codable {
     let id: UUID
     var name: String
     var categoryID: UUID
