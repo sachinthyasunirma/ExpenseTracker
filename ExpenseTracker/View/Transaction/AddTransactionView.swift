@@ -23,11 +23,17 @@ struct AddTransactionView: View {
     @State private var exchangeRate: String = "1.0"
     @State private var selectedCategoryId: UUID?
     
+    let entryPoint: EntryPoint
     let statuses = ["Pending", "Completed", "Cancelled"]
     let currencies = ["USD", "EUR", "LKR", "GBP", "JPY", "CAD"]
     
     private var isFormValid: Bool {
         !description.isEmpty && !amount.isEmpty && selectedCategoryId != nil
+    }
+    
+    init(viewModel: TransactionViewModel, entryPoint: EntryPoint = .general) {
+        self.viewModel = viewModel
+        self.entryPoint = entryPoint
     }
     
     var body: some View {
@@ -36,7 +42,7 @@ struct AddTransactionView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                FormComponents.headerView(title: "Add Transaction", dismiss: { dismiss() })
+                FormComponents.headerView(title: entryPoint == .income ? "Add Income" : "Add Expense", dismiss: { dismiss() })
                 
                 if categoryViewModel.isLoading {
                     loadingView
@@ -57,6 +63,15 @@ struct AddTransactionView: View {
             }
         }
         .onAppear {
+            switch entryPoint {
+            case .expense:
+                isIncome = false
+            case .income:
+                isIncome = true
+            case .general:
+                isIncome = false
+            }
+            
             Task {
                 await categoryViewModel.loadCategories()
             }
@@ -81,19 +96,15 @@ struct AddTransactionView: View {
                 
                 amountField
                 
-                DatePicker("Date", selection: $date, displayedComponents: .date)
-                    .datePickerStyle(.compact)
+                if entryPoint == .general {
+                    Toggle(isOn: $isIncome) {
+                        Text("Is Income?")
+                            .font(.system(size: 16))
+                    }
                     .padding()
                     .background(Color(hex: "F5F5F5"))
                     .cornerRadius(12)
-                
-                Toggle(isOn: $isIncome) {
-                    Text("Is Income?")
-                        .font(.system(size: 16))
                 }
-                .padding()
-                .background(Color(hex: "F5F5F5"))
-                .cornerRadius(12)
             }
             
             // Additional Information Section
@@ -103,43 +114,22 @@ struct AddTransactionView: View {
                     text: $merchantName,
                     placeholder: "e.g. Supermarket"
                 )
-                
-                FormComponents.customPicker(
-                    title: "Status",
-                    selection: $status,
-                    options: statuses
-                )
-            }
-            
-            // Currency Section
-            FormComponents.sectionView(title: "Currency") {
-                FormComponents.customPicker(
-                    title: "Currency",
-                    selection: $currencyCode,
-                    options: currencies
-                )
-                
-                FormComponents.inputField(
-                    title: "Exchange Rate",
-                    text: $exchangeRate,
-                    placeholder: "e.g. 1.0"
-                )
             }
             
             FormComponents.sectionView(title: "Category") {
-                            FormComponents.customPicker(
-                                title: "Category",
-                                selection: Binding<String>(
-                                    get: {
-                                        categoryViewModel.categories.first(where: { $0.id == selectedCategoryId })?.name ?? "Select Category"
-                                    },
-                                    set: { newValue in
-                                        selectedCategoryId = categoryViewModel.categories.first(where: { $0.name == newValue })?.id
-                                    }
-                                ),
-                                options: ["Select Category"] + categoryViewModel.categories.map { $0.name! }
-                            )
+                FormComponents.customPicker(
+                    title: "Category",
+                    selection: Binding<String>(
+                        get: {
+                            categoryViewModel.categories.first(where: { $0.id == selectedCategoryId })?.name ?? "Select Category"
+                        },
+                        set: { newValue in
+                            selectedCategoryId = categoryViewModel.categories.first(where: { $0.name == newValue })?.id
                         }
+                    ),
+                    options: ["Select Category"] + categoryViewModel.categories.map { $0.name! }
+                )
+            }
         }
     }
     
@@ -164,28 +154,9 @@ struct AddTransactionView: View {
         }
     }
     
-    private var categoryPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Category")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray)
-            
-            Picker("Select Category", selection: $selectedCategoryId) {
-                Text("Select").tag(UUID?.none)
-                ForEach(categoryViewModel.categories, id: \.id) { category in
-                    Text(category.name!).tag(Optional(category.id))
-                }
-            }
-            .pickerStyle(MenuPickerStyle())
-            .padding()
-            .background(Color(hex: "F5F5F5"))
-            .cornerRadius(12)
-        }
-    }
-    
     private var saveButton: some View {
         Button(action: saveTransaction) {
-            Text("Save Transaction")
+            Text(entryPoint == .income ? "Save Income" : "Save Expense")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -255,6 +226,6 @@ struct AddTransactionView: View {
 }
 
 #Preview {
-    AddTransactionView(viewModel: TransactionViewModel(accountId: UUID()))
+    AddTransactionView(viewModel: TransactionViewModel(accountId: UUID()), entryPoint: .general)
         .environmentObject(AccountViewModel(accountService: DefaultAccountService()))
 }

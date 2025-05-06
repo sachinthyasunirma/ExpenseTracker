@@ -11,6 +11,10 @@ struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @EnvironmentObject private var accountViewModel: AccountViewModel
     
+    // Add state variables to control transaction sheet
+    @State private var showingAddTransaction = false
+    @State private var transactionEntryPoint: EntryPoint = .expense
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -38,9 +42,36 @@ struct DashboardView: View {
         .refreshable {
             await viewModel.loadDashboardData()
         }
+        // Add the sheet for adding transactions
+        .sheet(isPresented: $showingAddTransaction) {
+            if let selectedAccount = accountViewModel.selectedAccount {
+                // Create a transaction view model
+                let transactionViewModel = TransactionViewModel(accountId: selectedAccount.id ?? UUID())
+                AddTransactionView(viewModel: transactionViewModel, entryPoint: transactionEntryPoint)
+            } else {
+                // Show message if no account is selected
+                VStack {
+                    Text("No account selected")
+                        .font(.title2)
+                    Text("Please select an account first")
+                        .foregroundColor(.gray)
+                    
+                    Button("Close") {
+                        showingAddTransaction = false
+                    }
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(Color(hex: "45A87E"))
+                    .cornerRadius(8)
+                    .padding(.top)
+                }
+                .padding()
+            }
+        }
     }
     
     private func accountBalanceCard(account: Account) -> some View {
+        // Existing code...
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(account.name ?? "Account Balance")
@@ -76,9 +107,6 @@ struct DashboardView: View {
                 }
             }
 
-
-
-            
             Spacer().frame(height: 8)
             
             Button("View All Accounts") {
@@ -95,6 +123,7 @@ struct DashboardView: View {
     }
     
     private var noAccountSelectedCard: some View {
+        // Existing code...
         VStack(spacing: 12) {
             Text("No Account Selected")
                 .font(.system(size: 16, weight: .medium))
@@ -125,7 +154,9 @@ struct DashboardView: View {
                 label: "Income",
                 color: Color(hex: "45A87E")
             ) {
-                // Add income action
+                // Handle income action
+                transactionEntryPoint = .income
+                showingAddTransaction = true
             }
             
             QuickActionButton(
@@ -133,7 +164,9 @@ struct DashboardView: View {
                 label: "Expense",
                 color: .red
             ) {
-                // Add expense action
+                // Handle expense action
+                transactionEntryPoint = .expense
+                showingAddTransaction = true
             }
             
             QuickActionButton(
@@ -141,11 +174,14 @@ struct DashboardView: View {
                 label: "Transfer",
                 color: .blue
             ) {
-                // Transfer action
+                // Handle transfer action
+                transactionEntryPoint = .income
+                showingAddTransaction = true
             }
         }
     }
     
+    // Other existing methods remain unchanged...
     private var recentTransactionsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -190,7 +226,6 @@ struct DashboardView: View {
         }
     }
 
-    
     private var accountsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -221,9 +256,7 @@ struct DashboardView: View {
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
-
 }
-
 
 struct QuickActionButton: View {
     let icon: String
@@ -268,5 +301,6 @@ enum TimeOfDay: String {
 }
 
 #Preview {
-    DashboardView().environmentObject(AccountViewModel(accountService: DefaultAccountService()))
+    DashboardView()
+        .environmentObject(AccountViewModel(accountService: DefaultAccountService()))
 }
