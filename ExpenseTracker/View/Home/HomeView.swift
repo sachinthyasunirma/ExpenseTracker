@@ -33,16 +33,21 @@ struct HomeView: View {
                         DashboardView()
                             .tag(0)
                         
-                        if let selectedAccount = accountViewModel.selectedAccount {
-                            TransactionListView(accountId: selectedAccount.id ?? UUID())
-                                .tag(1)
-                        } else {
-                            EmptyTransactionView()
-                                .tag(1)
-                        }
+//                        if let selectedAccount = accountViewModel.selectedAccount {
+//                            TransactionListView(accountId: selectedAccount.id ?? UUID())
+//                                .tag(1)
+//                        } else {
+//                            EmptyTransactionView()
+//                                .tag(1)
+//                        }
+                        
+                        BudgetListView()
+                            .tag(1)
                         
                         AccountListView()
                             .tag(2)
+                        
+                        
                         
                         if let selectedAccount = accountViewModel.selectedAccount {
 //                            AnalyticsView(accountId: selectedAccount.id ?? UUID())
@@ -52,8 +57,7 @@ struct HomeView: View {
                                 .tag(3)
                         }
                         
-                        BudgetListView()
-                            .tag(4)
+                        
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
                     
@@ -153,8 +157,8 @@ struct HomeView: View {
             }
             
             TabButton(
-                icon: "arrow.left.arrow.right",
-                label: "Transactions",
+                icon: "chart.pie.fill",
+                label: "Budgets",
                 isSelected: selectedTab == 1
             ) {
                 selectedTab = 1
@@ -184,19 +188,11 @@ struct HomeView: View {
             }
             
             TabButton(
-                icon: "chart.pie.fill",
+                icon: "chart.line.uptrend.xyaxis",
                 label: "Analytics",
                 isSelected: selectedTab == 3
             ) {
                 selectedTab = 3
-            }
-            
-            TabButton(
-                icon: "chart.pie.fill",
-                label: "Budgets",
-                isSelected: selectedTab == 4
-            ) {
-                selectedTab = 4
             }
         }
         .frame(height: 70)
