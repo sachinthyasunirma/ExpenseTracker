@@ -27,13 +27,16 @@ protocol TransactionProtocol {
 class TransactionRepository: TransactionProtocol {
     private let context: NSManagedObjectContext
     private let accountRepository: AccountRepositoryProtocol
+    private let categoryRepository: CategoryRepositoryProtocol
 
     init(
         context: NSManagedObjectContext = CoreDataService.shared.context,
-        accountRepository: AccountRepositoryProtocol = AccountRepository()
+        accountRepository: AccountRepositoryProtocol = AccountRepository(),
+        categoryRepository: CategoryRepositoryProtocol = CategoryRepository()
     ) {
         self.context = context
         self.accountRepository = accountRepository
+        self.categoryRepository = categoryRepository
     }
 
     
@@ -108,6 +111,10 @@ class TransactionRepository: TransactionProtocol {
         transaction.status = true
         transaction.createdAt = Date()
         transaction.updatedAt = Date()
+        
+        if let category = try await categoryRepository.fetchCategory(catergoryId: transactionDTO.categoryId) {
+            transaction.category = category
+        }
 
         if let account = try await accountRepository.fetchAccount(id: transactionDTO.accountId) {
             transaction.account = account
