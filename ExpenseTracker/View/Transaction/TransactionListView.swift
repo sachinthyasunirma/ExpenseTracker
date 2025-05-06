@@ -267,16 +267,47 @@ struct TransactionListView: View {
 struct TransactionRowView: View {
     let transaction: Transaction
     
+    // Computed property with safe fallbacks
+    private var category: Category? {
+        transaction.category
+    }
+    
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Category icon with color background
+            ZStack {
+                Circle()
+                    .fill(Color(hex: category?.color ?? "#45A87E")) // Safe unwrap
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: category?.icon ?? "dollarsign.circle.fill") // Safe unwrap
+                    .foregroundColor(.white)
+                    .font(.system(size: 18))
+            }
+            
+            // Transaction details
             VStack(alignment: .leading, spacing: 4) {
                 Text(transaction.desc ?? "No description")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.black)
+                    .lineLimit(1)
                 
-                Text(transaction.merchantName ?? "Unknown merchant")
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray)
+                HStack(spacing: 8) {
+                    Text(transaction.merchantName ?? "Unknown merchant")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                    
+                    // Only show separator if we have both merchant and category name
+                    if transaction.merchantName != nil && category?.name != nil {
+                        Circle()
+                            .frame(width: 3, height: 3)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    Text(category?.name ?? "Uncategorized") // Safe unwrap
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                }
                 
                 Text(transaction.date?.formatted(date: .abbreviated, time: .omitted) ?? "")
                     .font(.system(size: 12))
@@ -285,9 +316,23 @@ struct TransactionRowView: View {
             
             Spacer()
             
+            // Amount with conditional coloring
             Text(transaction.amount?.decimalValue.formatted(.currency(code: transaction.currencyCode ?? "USD")) ?? "")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(transaction.isIncome ? Color(hex: "45A87E") : .red)
+        }
+        .onAppear {
+            print("""
+            🧾 Transaction Debug:
+            - Account : \(transaction)
+            - Description: \(transaction.desc ?? "None")
+            - Merchant: \(transaction.merchantName ?? "None")
+            - Category: \(transaction.category?.name ?? "None")
+            - Amount: \(transaction.amount?.decimalValue ?? 0)
+            - Currency: \(transaction.currencyCode ?? "USD")
+            - Date: \(transaction.date ?? Date())
+            - Income: \(transaction.isIncome ? "Yes" : "No")
+            """)
         }
         .padding(16)
         .background(Color.white)
@@ -295,6 +340,7 @@ struct TransactionRowView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
+
 
 #Preview {
     TransactionListView(accountId: UUID())
