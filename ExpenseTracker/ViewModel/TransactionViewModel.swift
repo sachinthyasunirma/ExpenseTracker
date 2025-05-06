@@ -24,7 +24,7 @@ class TransactionViewModel: ObservableObject {
     }
     
     @MainActor
-    func loadTransactions() async {
+    func loadTransactions(accountId: UUID) async {
         isLoading = true
         errorMessage = nil
         
@@ -39,13 +39,13 @@ class TransactionViewModel: ObservableObject {
     }
     
     @MainActor
-    func addTransaction(_ transaction: TransactionDTO) async {
+    func addTransaction(_ transaction: TransactionDTO, accountId: UUID) async {
         isLoading = true
         errorMessage = nil
         
         do {
             try await service.addTransaction(transaction)
-            await loadTransactions()
+            await loadTransactions(accountId: accountId)
         } catch {
             errorMessage = "Failed to add transaction: \(error.localizedDescription)"
             showError = true
@@ -55,13 +55,13 @@ class TransactionViewModel: ObservableObject {
     }
     
     @MainActor
-    func deleteTransaction(_ transaction: Transaction) async {
+    func deleteTransaction(_ transaction: Transaction, accountId: UUID) async {
         isLoading = true
         errorMessage = nil
         
         do {
             try await service.removeTransaction(transaction: transaction)
-            await loadTransactions()
+            await loadTransactions(accountId: accountId)
         } catch {
             errorMessage = "Failed to delete transaction: \(error.localizedDescription)"
             showError = true
@@ -71,13 +71,13 @@ class TransactionViewModel: ObservableObject {
     }
     
     @MainActor
-    func cancelTransaction(_ transactionId: UUID) async {
+    func cancelTransaction(_ transactionId: UUID, accountId: UUID) async {
         isLoading = true
         errorMessage = nil
         
         do {
             try await service.cancelTransaction(transactionId: transactionId)
-            await loadTransactions()
+            await loadTransactions(accountId: accountId)
         } catch {
             errorMessage = "Failed to cancel transaction: \(error.localizedDescription)"
             showError = true

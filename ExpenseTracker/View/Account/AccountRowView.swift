@@ -21,7 +21,7 @@ struct AccountRowView: View {
     ]
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             // Account type icon
             ZStack {
                 Circle()
@@ -63,18 +63,10 @@ struct AccountRowView: View {
                 }
             }
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
+        .padding(16)
         .background(Color.white)
         .cornerRadius(12)
-        .shadow(
-            color: Color.black.opacity(0.05),
-            radius: 8,
-            x: 0,
-            y: 2
-        )
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
     
     func formatCurrency(_ amount: Decimal, currency: String) -> String {

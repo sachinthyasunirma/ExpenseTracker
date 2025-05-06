@@ -15,6 +15,18 @@ struct HomeView: View {
     @State private var showingAddTransaction = false
     @State private var showingSettings = false
     
+    @State private var activeSheet: ActiveSheet?
+    
+    enum ActiveSheet: Identifiable {
+        case accountPicker
+        case addTransaction
+        case settings
+        
+        var id: Int {
+            hashValue
+        }
+    }
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -70,18 +82,46 @@ struct HomeView: View {
             .task {
                 await loadData()
             }
-            .sheet(isPresented: $showingAccountPicker) {
+            .sheet(isPresented: Binding<Bool>(
+                get: { showingAccountPicker },
+                set: { newValue in
+                    if newValue {
+                        showingAddTransaction = false
+                        showingSettings = false
+                    }
+                    showingAccountPicker = newValue
+                }
+            )) {
                 AccountSelectionView(
                     accounts: accountViewModel.accounts,
                     selectedAccount: $accountViewModel.selectedAccount
                 )
             }
-            .sheet(isPresented: $showingAddTransaction) {
+            .sheet(isPresented: Binding<Bool>(
+                get: { showingAddTransaction },
+                set: { newValue in
+                    if newValue {
+                        showingAccountPicker = false
+                        showingSettings = false
+                    }
+                    showingAddTransaction = newValue
+                }
+            )) {
                 if let selectedAccount = accountViewModel.selectedAccount {
-//                    AddTransactionView(accountId: selectedAccount.id ?? UUID())
+                    let transactionViewModel = TransactionViewModel(accountId: selectedAccount.id ?? UUID())
+                    AddTransactionView(viewModel: transactionViewModel, entryPoint: .general)
                 }
             }
-            .sheet(isPresented: $showingSettings) {
+            .sheet(isPresented: Binding<Bool>(
+                get: { showingSettings },
+                set: { newValue in
+                    if newValue {
+                        showingAccountPicker = false
+                        showingAddTransaction = false
+                    }
+                    showingSettings = newValue
+                }
+            )) {
                 SettingsView()
             }
         }

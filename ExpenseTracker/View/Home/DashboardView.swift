@@ -37,10 +37,10 @@ struct DashboardView: View {
             .padding()
         }
         .task {
-            await viewModel.loadDashboardData()
+            await viewModel.loadDashboardData(accountId: accountViewModel.selectedAccount?.id ?? UUID())
         }
         .refreshable {
-            await viewModel.loadDashboardData()
+            await viewModel.loadDashboardData(accountId: accountViewModel.selectedAccount?.id ?? UUID())
         }
         // Add the sheet for adding transactions
         .sheet(isPresented: $showingAddTransaction) {
