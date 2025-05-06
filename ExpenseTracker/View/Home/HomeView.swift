@@ -33,19 +33,21 @@ struct HomeView: View {
                         DashboardView()
                             .tag(0)
                         
-//                        if let selectedAccount = accountViewModel.selectedAccount {
-//                            TransactionListView(accountId: selectedAccount.id ?? UUID())
-//                                .tag(1)
-//                        } else {
-//                            EmptyTransactionView()
-//                                .tag(1)
-//                        }
+                        
                         
                         BudgetListView()
                             .tag(1)
                         
-                        AccountListView()
-                            .tag(2)
+//                        AccountListView()
+//                            .tag(2)
+                        
+                        if let selectedAccount = accountViewModel.selectedAccount {
+                            TransactionListView(accountId: selectedAccount.id ?? UUID())
+                                .tag(2)
+                        } else {
+                            EmptyTransactionView()
+                                .tag(2)
+                        }
                         
                         
                         
@@ -180,8 +182,8 @@ struct HomeView: View {
             .frame(maxWidth: .infinity)
             
             TabButton(
-                icon: "creditcard.fill",
-                label: "Accounts",
+                icon: "arrow.left.arrow.right",
+                label: "Transactions",
                 isSelected: selectedTab == 2
             ) {
                 selectedTab = 2
