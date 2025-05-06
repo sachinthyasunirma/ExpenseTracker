@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var selectedTab = 0
     @EnvironmentObject private var accountViewModel: AccountViewModel
+    @EnvironmentObject private var budgetViewModel: BudgetViewModel
     @State private var showingAccountPicker = false
     @State private var showingAddTransaction = false
     @State private var showingSettings = false
@@ -50,6 +51,9 @@ struct HomeView: View {
                             EmptyAnalyticsView()
                                 .tag(3)
                         }
+                        
+                        BudgetListView()
+                            .tag(4)
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
                     
@@ -186,6 +190,14 @@ struct HomeView: View {
             ) {
                 selectedTab = 3
             }
+            
+            TabButton(
+                icon: "chart.pie.fill",
+                label: "Budgets",
+                isSelected: selectedTab == 4
+            ) {
+                selectedTab = 4
+            }
         }
         .frame(height: 70)
         .background(Color.white)
@@ -261,4 +273,5 @@ extension NSDecimalNumber {
     HomeView()
         .environment(\.managedObjectContext, CoreDataService.shared.context)
         .environmentObject(AccountViewModel(accountService: DefaultAccountService()))
+        .environmentObject(BudgetViewModel())
 }

@@ -14,6 +14,8 @@ struct ExpenseTrackerApp: App {
 
     let modelContainer = CoreDataService.shared
     @StateObject private var accountViewModel = AccountViewModel()
+    
+    @StateObject private var budgetViewModel = BudgetViewModel()
 
     var body: some Scene {
         WindowGroup {
@@ -30,6 +32,7 @@ struct ExpenseTrackerApp: App {
                 withAnimation {
                     HomeView()
                         .environmentObject(accountViewModel)
+                        .environmentObject(budgetViewModel)
                 }
             }
         }
