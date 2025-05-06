@@ -127,19 +127,19 @@ struct AddTransactionView: View {
             }
             
             FormComponents.sectionView(title: "Category") {
-                            FormComponents.customPicker(
-                                title: "Category",
-                                selection: Binding<String>(
-                                    get: {
-                                        categoryViewModel.categories.first(where: { $0.id == selectedCategoryId })?.name ?? "Select Category"
-                                    },
-                                    set: { newValue in
-                                        selectedCategoryId = categoryViewModel.categories.first(where: { $0.name == newValue })?.id
-                                    }
-                                ),
-                                options: ["Select Category"] + categoryViewModel.categories.map { $0.name! }
-                            )
+                FormComponents.customPicker(
+                    title: "Category",
+                    selection: Binding<String>(
+                        get: {
+                            categoryViewModel.categories.first(where: { $0.id == selectedCategoryId })?.name ?? "Select Category"
+                        },
+                        set: { newValue in
+                            selectedCategoryId = categoryViewModel.categories.first(where: { $0.name == newValue })?.id
                         }
+                    ),
+                    options: ["Select Category"] + categoryViewModel.categories.map { $0.name! }
+                )
+            }
         }
     }
     
