@@ -77,9 +77,28 @@ struct TransactionListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .transactionAdded)) { _ in
+                    Task {
+                        await viewModel.loadTransactions(accountId: accountViewModel.selectedAccount?.id ?? UUID())
+                    }
+                }
         .sheet(isPresented: $showingAddSheet) {
-            AddTransactionView(viewModel: viewModel, entryPoint: .expense)
+            AddTransactionView(viewModel: viewModel, entryPoint: .general)
         }
+        .onChange(of: accountViewModel.selectedAccount) { newAccount in
+                viewModel.isLoading = true
+                viewModel.errorMessage = nil
+                Task {
+                    do {
+                        if let accountId = newAccount?.id {
+                            try await viewModel.loadTransactions(accountId: accountId)
+                        }
+                    } catch {
+                        viewModel.errorMessage = error.localizedDescription
+                    }
+                    viewModel.isLoading = false
+                }
+            }
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("Error"),
@@ -88,7 +107,7 @@ struct TransactionListView: View {
             )
         }
         .task {
-            await viewModel.loadTransactions()
+            await viewModel.loadTransactions(accountId: accountViewModel.selectedAccount?.id ?? UUID())
             await loadData()
         }
         .onChange(of: viewModel.errorMessage) { newValue in
@@ -258,7 +277,7 @@ struct TransactionListView: View {
     private func deleteTransaction(_ transaction: Transaction) {
         Task {
             if let id = transaction.id {
-                await viewModel.deleteTransaction(transaction)
+                await viewModel.deleteTransaction(transaction, accountId: accountViewModel.selectedAccount?.id ?? UUID())
             }
         }
     }
@@ -293,11 +312,6 @@ struct TransactionRowView: View {
                     .lineLimit(1)
                 
                 HStack(spacing: 8) {
-                    Text(transaction.merchantName ?? "Unknown merchant")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                    
-                    // Only show separator if we have both merchant and category name
                     if transaction.merchantName != nil && category?.name != nil {
                         Circle()
                             .frame(width: 3, height: 3)
@@ -320,19 +334,6 @@ struct TransactionRowView: View {
             Text(transaction.amount?.decimalValue.formatted(.currency(code: transaction.currencyCode ?? "USD")) ?? "")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(transaction.isIncome ? Color(hex: "45A87E") : .red)
-        }
-        .onAppear {
-            print("""
-            🧾 Transaction Debug:
-            - Account : \(transaction)
-            - Description: \(transaction.desc ?? "None")
-            - Merchant: \(transaction.merchantName ?? "None")
-            - Category: \(transaction.category?.name ?? "None")
-            - Amount: \(transaction.amount?.decimalValue ?? 0)
-            - Currency: \(transaction.currencyCode ?? "USD")
-            - Date: \(transaction.date ?? Date())
-            - Income: \(transaction.isIncome ? "Yes" : "No")
-            """)
         }
         .padding(16)
         .background(Color.white)

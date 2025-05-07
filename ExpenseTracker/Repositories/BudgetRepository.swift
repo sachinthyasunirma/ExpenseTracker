@@ -17,6 +17,8 @@ protocol BudgetRepositoryProtocol {
     func deleteBudget(budget: Budget) async throws
     func fetchBudgets(for category: Category) async throws -> [Budget]
     func fetchCurrentBudgets() async throws -> [Budget]
+    func fetchBudgetByCategory(categoryId: UUID) async throws -> Budget?
+    
 }
 
 class BudgetRepository: BudgetRepositoryProtocol {
@@ -40,6 +42,7 @@ class BudgetRepository: BudgetRepositoryProtocol {
         budget.id = UUID()
         budget.name = name
         budget.amountLimit = amountLimit
+        budget.currentLimit = 0.0
         budget.startDate = startDate
         budget.endDate = endDate
         budget.notifyAtPercent = notifyAtPercent
@@ -80,6 +83,15 @@ class BudgetRepository: BudgetRepositoryProtocol {
         context.delete(budget)
         try await context.perform {
             try self.context.save()
+        }
+    }
+    
+    func fetchBudgetByCategory(categoryId: UUID) async throws -> Budget? {
+        try await context.perform {
+            let request: NSFetchRequest<Budget> = Budget.fetchRequest()
+            request.predicate = NSPredicate(format: "category.id == %@", categoryId as CVarArg)
+            request.fetchLimit = 1
+            return try self.context.fetch(request).first
         }
     }
     

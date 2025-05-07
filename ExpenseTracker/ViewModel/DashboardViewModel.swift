@@ -28,13 +28,13 @@ class DashboardViewModel: ObservableObject {
     }
     
     @MainActor
-    func loadDashboardData() async {
+    func loadDashboardData(accountId: UUID?) async {
         isLoading = true
         errorMessage = nil
         
         do {
             // Load recent transactions for all accounts
-            recentTransactions = try await loadRecentTransactions()
+            recentTransactions = try await loadRecentTransactions(accountId: accountId)
             
             // Calculate monthly changes for all accounts
             try await calculateMonthlyChanges()
@@ -47,19 +47,10 @@ class DashboardViewModel: ObservableObject {
         isLoading = false
     }
     
-    private func loadRecentTransactions() async throws -> [Transaction] {
-        let accounts = try await accountService.getAllAccounts()
-        var allTransactions: [Transaction] = []
+    private func loadRecentTransactions(accountId: UUID?) async throws -> [Transaction] {
         
-        for account in accounts {
-            if let accountId = account.id {
-                let transactions = try await transactionService.getAllTransactions(accountId: accountId)
-                allTransactions.append(contentsOf: transactions)
-            }
-        }
-        
-        // Sort by date (newest first) and take the first 10
-        return Array(allTransactions
+        let transactions = try await transactionService.getAllTransactions(accountId: accountId!)
+        return Array(transactions
             .sorted { ($0.date ?? Date()) > ($1.date ?? Date()) }
             .prefix(10))
     }

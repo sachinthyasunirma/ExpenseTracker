@@ -204,7 +204,7 @@ struct AddTransactionView: View {
         )
         
         Task {
-            await viewModel.addTransaction(dto)
+            await viewModel.addTransaction(dto, accountId: accountViewModel.selectedAccount?.id ?? UUID())
             if viewModel.errorMessage == nil {
                 dismiss()
             }

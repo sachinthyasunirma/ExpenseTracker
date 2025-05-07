@@ -72,6 +72,10 @@ struct AccountListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .onAppear{
+            print(">>> AccountListView.onAppear\n")
+            print(">>> AccountListView.onAppear viewModel.accounts.count: \(viewModel.selectedAccount)\n")
+        }
         .sheet(isPresented: $showingAddSheet) {
             AccountView(viewModel: viewModel)
         }
