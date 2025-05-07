@@ -16,6 +16,8 @@ struct ExpenseTrackerApp: App {
     @StateObject private var accountViewModel = AccountViewModel()
     
     @StateObject private var budgetViewModel = BudgetViewModel()
+    
+    @StateObject private var analyticsViewModel = AnalyticsViewModel()
 
     var body: some Scene {
         WindowGroup {
@@ -33,6 +35,7 @@ struct ExpenseTrackerApp: App {
                     HomeView()
                         .environmentObject(accountViewModel)
                         .environmentObject(budgetViewModel)
+                        .environmentObject(analyticsViewModel)
                 }
             }
         }

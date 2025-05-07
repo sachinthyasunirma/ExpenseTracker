@@ -171,3 +171,89 @@
 //        return formatter.string(from: self as NSDecimalNumber) ?? ""
 //    }
 //}
+
+
+import Foundation
+import Combine
+import SwiftUI
+
+struct CategorySummary: Identifiable {
+    var id: UUID { categoryId }
+    let categoryId: UUID
+    let categoryName: String
+    let totalAmount: Double
+}
+
+struct CategoryMonthlyData: Identifiable {
+    var id: UUID { categoryId }
+    let categoryId: UUID
+    let categoryName: String
+    let monthlyTotals: [String: Double] // month format "MMM yyyy" → amount
+}
+
+class AnalyticsViewModel: ObservableObject {
+    @Published var categorySummaries: [CategorySummary] = []
+    @Published var monthlyCategoryData: [CategoryMonthlyData] = []
+
+    private var transactions: [TransactionDTO] = []
+    private var categories: [CategoryDTO] = []
+
+    init() {
+//        loadMockData() // Replace with real CoreData/service loading later
+    }
+
+    func loadPieChartData(startDate: Date, endDate: Date) {
+        let filtered = transactions.filter { $0.date >= startDate && $0.date <= endDate && $0.isIncome == false }
+        let grouped = Dictionary(grouping: filtered, by: { $0.categoryId })
+
+        categorySummaries = grouped.compactMap { (categoryId: UUID, transactions: [TransactionDTO]) -> CategorySummary? in
+            guard let category = categories.first(where: { $0.categoryID == categoryId }) else { return nil }
+            let total = transactions.reduce(Decimal(0)) { $0 + $1.amount }
+            let totalAsDouble = NSDecimalNumber(decimal: total).doubleValue
+            return CategorySummary(categoryId: categoryId, categoryName: category.name!, totalAmount: totalAsDouble)
+        }.sorted(by: { $0.totalAmount > $1.totalAmount })
+    }
+
+    func loadLineChartData() {
+        let expenses = transactions.filter { $0.isIncome == false }
+
+        let calendar = Calendar.current
+        let groupedByCategory = Dictionary(grouping: expenses, by: { $0.categoryId })
+
+        monthlyCategoryData = groupedByCategory.compactMap { (categoryId: UUID, transactions: [TransactionDTO]) -> CategoryMonthlyData? in
+            guard let category = categories.first(where: { $0.categoryID == categoryId }) else { return nil }
+
+            var monthlyTotals: [String: Double] = [:]
+            for tx in transactions {
+                let monthKey = monthYearString(from: tx.date)
+                monthlyTotals[monthKey, default: 0] += NSDecimalNumber(decimal: tx.amount).doubleValue
+            }
+
+            return CategoryMonthlyData(
+                categoryId: categoryId,
+                categoryName: category.name!,
+                monthlyTotals: monthlyTotals
+            )
+        }
+    }
+
+    private func monthYearString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM yyyy"
+        return formatter.string(from: date)
+    }
+
+    // MARK: - TEMP MOCK DATA LOADER
+//    private func loadMockData() {
+//        let food = CategoryDTO(id: UUID(), name: "Food")
+//        let travel = CategoryDTO(id: UUID(), name: "Travel")
+//        categories = [food, travel]
+//
+//        transactions = [
+//            TransactionDTO(id: UUID(), categoryId: food.id, amount: 2500, date: Date().addingTimeInterval(-5*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: food.id, amount: 1500, date: Date().addingTimeInterval(-25*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: travel.id, amount: 5000, date: Date().addingTimeInterval(-40*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: travel.id, amount: 2000, date: Date(), type: .expense)
+//        ]
+//    }
+}
