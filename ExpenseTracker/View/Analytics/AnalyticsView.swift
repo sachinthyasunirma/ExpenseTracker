@@ -10,6 +10,7 @@ import SwiftUI
 import Charts
 
 struct AnalyticsView: View {
+    let accountId: UUID
     @EnvironmentObject var analyticsVM: AnalyticsViewModel
 
     @State private var startDate: Date = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date())) ?? Date()
@@ -26,7 +27,8 @@ struct AnalyticsView: View {
                         DatePicker("From", selection: $startDate, displayedComponents: .date)
                         DatePicker("To", selection: $endDate, in: startDate...Date(), displayedComponents: .date)
                         Button("Update Pie Chart") {
-                            analyticsVM.loadPieChartData(startDate: startDate, endDate: endDate)
+                            analyticsVM.loadAllData(accountId: accountId, startDate: startDate, endDate: endDate)
+
                         }
                         .buttonStyle(.borderedProminent)
                         .padding(.top, 4)
@@ -52,9 +54,27 @@ struct AnalyticsView: View {
             }
             .navigationTitle("Analytics")
             .onAppear {
-                analyticsVM.loadPieChartData(startDate: startDate, endDate: endDate)
-                analyticsVM.loadLineChartData()
+                analyticsVM.loadAllData(accountId: accountId, startDate: startDate, endDate: endDate)
+
             }
+        
+//            .onAppear {
+//                // TEMP: Add fake data to test pie chart
+//                let foodCategory = CategoryDTO(categoryID: UUID())
+//                let travelCategory = CategoryDTO(categoryID: UUID())
+//
+//                analyticsVM.categories = [foodCategory, travelCategory]
+//
+//                analyticsVM.transactions = [
+//                    TransactionDTO(id: UUID(), categoryId: foodCategory.categoryId, amount: 1200, date: Date(), isIncome: false),
+//                    TransactionDTO(id: UUID(), categoryId: foodCategory.categoryId, amount: 800, date: Date(), isIncome: false),
+//                    TransactionDTO(id: UUID(), categoryId: travelCategory.categoryId, amount: 3000, date: Date(), isIncome: false)
+//                ]
+//
+//                analyticsVM.loadPieChartData(startDate: startDate, endDate: endDate)
+//                analyticsVM.loadLineChartData()
+//            }
+
         
     }
 }
