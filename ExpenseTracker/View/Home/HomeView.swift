@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let transactionAdded = Notification.Name("TransactionAdded")
+}
+
 struct HomeView: View {
     @State private var selectedTab = 0
     @EnvironmentObject private var accountViewModel: AccountViewModel
@@ -103,6 +107,11 @@ struct HomeView: View {
                     if newValue {
                         showingAccountPicker = false
                         showingSettings = false
+                    } else {
+                        // Sheet is dismissing - refresh data
+                        Task {
+                            await loadData()
+                        }
                     }
                     showingAddTransaction = newValue
                 }
@@ -110,6 +119,10 @@ struct HomeView: View {
                 if let selectedAccount = accountViewModel.selectedAccount {
                     let transactionViewModel = TransactionViewModel(accountId: selectedAccount.id ?? UUID())
                     AddTransactionView(viewModel: transactionViewModel, entryPoint: .general)
+                        .onDisappear {
+                            // Notify the dashboard to refresh
+                            NotificationCenter.default.post(name: .transactionAdded, object: nil)
+                        }
                 }
             }
             .sheet(isPresented: Binding<Bool>(

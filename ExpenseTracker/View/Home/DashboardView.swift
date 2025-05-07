@@ -8,70 +8,111 @@
 import SwiftUI
 
 struct DashboardView: View {
+    enum ActiveSheet: Identifiable {
+        case addTransaction(EntryPoint)
+        case accountSelection
+        
+        var id: String {
+            switch self {
+            case .addTransaction(let entryPoint):
+                return "addTransaction-\(entryPoint)"
+            case .accountSelection:
+                return "accountSelection"
+            }
+        }
+    }
+    
     @StateObject private var viewModel = DashboardViewModel()
     @EnvironmentObject private var accountViewModel: AccountViewModel
-    
-    // Add state variables to control transaction sheet
-    @State private var showingAddTransaction = false
-    @State private var transactionEntryPoint: EntryPoint = .expense
+    @State private var activeSheet: ActiveSheet?
+    @State private var isSheetPresented = false
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                
                 if let account = accountViewModel.selectedAccount {
                     accountBalanceCard(account: account)
                 } else {
                     noAccountSelectedCard
                 }
                 
-                // Quick actions
                 quickActions
-                
-                // Recent transactions (account-specific)
                 recentTransactionsSection
-                
-                // Accounts summary
                 accountsSection
             }
             .padding()
         }
-        .task {
-            await viewModel.loadDashboardData(accountId: accountViewModel.selectedAccount?.id ?? UUID())
-        }
-        .refreshable {
-            await viewModel.loadDashboardData(accountId: accountViewModel.selectedAccount?.id ?? UUID())
-        }
-        // Add the sheet for adding transactions
-        .sheet(isPresented: $showingAddTransaction) {
-            if let selectedAccount = accountViewModel.selectedAccount {
-                // Create a transaction view model
-                let transactionViewModel = TransactionViewModel(accountId: selectedAccount.id ?? UUID())
-                AddTransactionView(viewModel: transactionViewModel, entryPoint: transactionEntryPoint)
-            } else {
-                // Show message if no account is selected
-                VStack {
-                    Text("No account selected")
-                        .font(.title2)
-                    Text("Please select an account first")
-                        .foregroundColor(.gray)
-                    
-                    Button("Close") {
-                        showingAddTransaction = false
+        .onReceive(NotificationCenter.default.publisher(for: .transactionAdded)) { _ in
+                    Task {
+                        await loadDashboardData()
                     }
-                    .padding()
-                    .foregroundColor(.white)
-                    .background(Color(hex: "45A87E"))
-                    .cornerRadius(8)
-                    .padding(.top)
                 }
-                .padding()
-            }
+        .sheet(item: $activeSheet) { sheet in
+            sheetView(for: sheet)
+                .onAppear { isSheetPresented = true }
+                .onDisappear {
+                    isSheetPresented = false
+                    Task { await loadDashboardData() }
+                }
+        }
+        .task {
+            await loadDashboardData()
+        }
+        .onChange(of: accountViewModel.selectedAccount) { _ in
+            guard !isSheetPresented else { return }
+            Task { await loadDashboardData() }
         }
     }
     
+    @ViewBuilder
+    private func sheetView(for sheet: ActiveSheet) -> some View {
+        switch sheet {
+        case .addTransaction(let entryPoint):
+            if let selectedAccount = accountViewModel.selectedAccount {
+                let transactionViewModel = TransactionViewModel(
+                    accountId: selectedAccount.id ?? UUID()
+                )
+                AddTransactionView(
+                    viewModel: transactionViewModel,
+                    entryPoint: entryPoint
+                )
+            } else {
+                noAccountSelectedSheet
+            }
+            
+        case .accountSelection:
+            AccountSelectionView(
+                accounts: accountViewModel.accounts,
+                selectedAccount: $accountViewModel.selectedAccount
+            )
+        }
+    }
+    
+    private func loadDashboardData() async {
+        await viewModel.loadDashboardData(
+            accountId: accountViewModel.selectedAccount?.id ?? UUID()
+        )
+    }
+    
+    private var noAccountSelectedSheet: some View {
+        VStack {
+            Text("No account selected")
+                .font(.title2)
+            Text("Please select an account first")
+                .foregroundColor(.gray)
+            
+            Button("Close") {
+                activeSheet = nil
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "45A87E"))
+            .padding(.top)
+        }
+        .padding()
+    }
+    
+    
     private func accountBalanceCard(account: Account) -> some View {
-        // Existing code...
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(account.name ?? "Account Balance")
@@ -92,25 +133,24 @@ struct DashboardView: View {
             }
             
             if let accountId = account.id {
-                let changeBinding = $viewModel.accountMonthlyChanges[accountId]
-                let monthlyChange = changeBinding.wrappedValue
-
+                let monthlyChange = viewModel.accountMonthlyChanges[accountId]
+                
                 if let monthlyChange {
                     HStack {
                         Image(systemName: monthlyChange >= 0 ? "arrow.up" : "arrow.down")
                             .foregroundColor(monthlyChange >= 0 ? Color(hex: "45A87E") : .red)
-
+                        
                         Text(String(format: "%.1f%% %@ from last month", abs(monthlyChange), monthlyChange >= 0 ? "increase" : "decrease"))
                             .font(.system(size: 14))
                             .foregroundColor(monthlyChange >= 0 ? Color(hex: "45A87E") : .red)
                     }
                 }
             }
-
+            
             Spacer().frame(height: 8)
             
             Button("View All Accounts") {
-                // Navigate to accounts view
+                activeSheet = .accountSelection
             }
             .font(.system(size: 14, weight: .medium))
             .foregroundColor(Color(hex: "45A87E"))
@@ -123,7 +163,6 @@ struct DashboardView: View {
     }
     
     private var noAccountSelectedCard: some View {
-        // Existing code...
         VStack(spacing: 12) {
             Text("No Account Selected")
                 .font(.system(size: 16, weight: .medium))
@@ -135,7 +174,7 @@ struct DashboardView: View {
                 .multilineTextAlignment(.center)
             
             Button("Select Account") {
-                // Trigger account selection
+                activeSheet = .accountSelection
             }
             .font(.system(size: 14, weight: .medium))
             .foregroundColor(Color(hex: "45A87E"))
@@ -154,9 +193,7 @@ struct DashboardView: View {
                 label: "Income",
                 color: Color(hex: "45A87E")
             ) {
-                // Handle income action
-                transactionEntryPoint = .income
-                showingAddTransaction = true
+                activeSheet = .addTransaction(.income)
             }
             
             QuickActionButton(
@@ -164,9 +201,7 @@ struct DashboardView: View {
                 label: "Expense",
                 color: .red
             ) {
-                // Handle expense action
-                transactionEntryPoint = .expense
-                showingAddTransaction = true
+                activeSheet = .addTransaction(.expense)
             }
             
             QuickActionButton(
@@ -174,14 +209,11 @@ struct DashboardView: View {
                 label: "Transfer",
                 color: .blue
             ) {
-                // Handle transfer action
-                transactionEntryPoint = .income
-                showingAddTransaction = true
+                activeSheet = .addTransaction(.income)
             }
         }
     }
     
-    // Other existing methods remain unchanged...
     private var recentTransactionsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -192,7 +224,7 @@ struct DashboardView: View {
                 Spacer()
                 
                 Button("See All") {
-                    // Navigate to transactions
+                    // Navigate to transactions list
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(hex: "45A87E"))
@@ -205,10 +237,10 @@ struct DashboardView: View {
             } else {
                 Text(accountViewModel.selectedAccount == nil ?
                      "Select an account to view transactions" :
-                     "No recent transactions")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .padding()
+                        "No recent transactions")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .padding()
             }
         }
         .padding()
@@ -220,12 +252,10 @@ struct DashboardView: View {
     @ViewBuilder
     private var accountRows: some View {
         ForEach(accountViewModel.accounts.prefix(3)) { account in
-            AccountRowView(
-                account: account
-            )
+            AccountRowView(account: account)
         }
     }
-
+    
     private var accountsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -236,7 +266,7 @@ struct DashboardView: View {
                 Spacer()
                 
                 Button("See All") {
-                    // Navigate to accounts
+                    activeSheet = .accountSelection
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(hex: "45A87E"))
@@ -279,23 +309,6 @@ struct QuickActionButton: View {
                     .foregroundColor(.black)
             }
             .frame(maxWidth: .infinity)
-        }
-    }
-}
-
-enum TimeOfDay: String {
-    case morning = "morning"
-    case afternoon = "afternoon"
-    case evening = "evening"
-    case night = "night"
-    
-    static var now: TimeOfDay {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 6..<12: return .morning
-        case 12..<17: return .afternoon
-        case 17..<22: return .evening
-        default: return .night
         }
     }
 }

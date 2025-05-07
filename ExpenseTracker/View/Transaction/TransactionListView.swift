@@ -77,8 +77,13 @@ struct TransactionListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .transactionAdded)) { _ in
+                    Task {
+                        await viewModel.loadTransactions(accountId: accountViewModel.selectedAccount?.id ?? UUID())
+                    }
+                }
         .sheet(isPresented: $showingAddSheet) {
-            AddTransactionView(viewModel: viewModel, entryPoint: .expense)
+            AddTransactionView(viewModel: viewModel, entryPoint: .general)
         }
         .onChange(of: accountViewModel.selectedAccount) { newAccount in
                 viewModel.isLoading = true

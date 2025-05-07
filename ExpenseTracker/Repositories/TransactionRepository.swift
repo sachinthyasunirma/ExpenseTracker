@@ -28,15 +28,18 @@ class TransactionRepository: TransactionProtocol {
     private let context: NSManagedObjectContext
     private let accountRepository: AccountRepositoryProtocol
     private let categoryRepository: CategoryRepositoryProtocol
+    private let budgetRepository: BudgetRepositoryProtocol
 
     init(
         context: NSManagedObjectContext = CoreDataService.shared.context,
         accountRepository: AccountRepositoryProtocol = AccountRepository(),
-        categoryRepository: CategoryRepositoryProtocol = CategoryRepository()
+        categoryRepository: CategoryRepositoryProtocol = CategoryRepository(),
+        budgetRepository: BudgetRepositoryProtocol = BudgetRepository()
     ) {
         self.context = context
         self.accountRepository = accountRepository
         self.categoryRepository = categoryRepository
+        self.budgetRepository = budgetRepository
     }
 
     
@@ -114,6 +117,13 @@ class TransactionRepository: TransactionProtocol {
         
         if let category = try await categoryRepository.fetchCategory(catergoryId: transactionDTO.categoryId) {
             transaction.category = category
+        }
+        
+        if let budget = try await budgetRepository.fetchBudgetByCategory(categoryId: transactionDTO.categoryId) {
+            if transactionDTO.isIncome {
+            } else {
+                budget.currentLimit += NSDecimalNumber(decimal: transactionDTO.amount).doubleValue
+            }
         }
 
         if let account = try await accountRepository.fetchAccount(id: transactionDTO.accountId) {
