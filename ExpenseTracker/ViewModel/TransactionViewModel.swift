@@ -26,15 +26,12 @@ class TransactionViewModel: ObservableObject {
     @MainActor
     func loadTransactions(accountId: UUID) async {
         isLoading = true
-        errorMessage = nil
-        
         do {
             transactions = try await service.getAllTransactions(accountId: accountId)
         } catch {
-            errorMessage = "Failed to load transactions: \(error.localizedDescription)"
+            errorMessage = error.localizedDescription
             showError = true
         }
-        
         isLoading = false
     }
     

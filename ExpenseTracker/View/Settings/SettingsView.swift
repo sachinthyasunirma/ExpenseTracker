@@ -77,8 +77,6 @@ struct SettingsView: View {
     private var appSettingsSection: some View {
         Section(header: Text("App Settings")) {
             currencyPicker
-            darkmodeToggle
-            biometricToggle
         }
     }
     
