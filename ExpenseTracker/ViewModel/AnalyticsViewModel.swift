@@ -171,3 +171,115 @@
 //        return formatter.string(from: self as NSDecimalNumber) ?? ""
 //    }
 //}
+
+
+import Foundation
+import Combine
+import SwiftUI
+
+struct CategorySummary: Identifiable {
+    var id: UUID { categoryId }
+    let categoryId: UUID
+    let categoryName: String
+    let totalAmount: Double
+}
+
+struct CategoryMonthlyData: Identifiable {
+    var id: UUID { categoryId }
+    let categoryId: UUID
+    let categoryName: String
+    let monthlyTotals: [String: Double]
+}
+
+class AnalyticsViewModel: ObservableObject {
+    @Published var categorySummaries: [CategorySummary] = []
+    @Published var monthlyCategoryData: [CategoryMonthlyData] = []
+
+    private let transactionService = TransactionService()
+    private let categoryService = DefaultCategoryService()
+
+    func loadAllData(accountId: UUID, startDate: Date, endDate: Date) {
+        Task {
+            do {
+                let transactions = try await transactionService.getTransactionsByDateRange(accountId: accountId, startDate: startDate, endDate: endDate)
+                let categories = try await categoryService.fetchCategories()
+
+                DispatchQueue.main.async {
+                    self.loadPieChartData(transactions: transactions, categories: categories, startDate: startDate, endDate: endDate)
+                    self.loadLineChartData(transactions: transactions, categories: categories)
+                }
+            } catch {
+                print("Analytics load failed: \(error)")
+            }
+        }
+    }
+
+    func loadPieChartData(transactions: [Transaction], categories: [Category], startDate: Date, endDate: Date) {
+        let filtered = transactions.filter { tx in
+            guard let date = tx.createdAt else { return false }
+            return date >= startDate && date <= endDate && tx.isIncome == false
+        }
+
+        let grouped = Dictionary(grouping: filtered, by: { $0.category?.id ?? UUID() })
+
+        categorySummaries = grouped.compactMap { (categoryId, transactions) in
+            guard let category = categories.first(where: { $0.id == categoryId }) else { return nil }
+
+            let total = transactions.reduce(Decimal(0)) { $0 + (($1.amount as Decimal?) ?? 0) }
+
+            let totalAsDouble = NSDecimalNumber(decimal: total).doubleValue
+
+            return CategorySummary(
+                categoryId: categoryId,
+                categoryName: category.name ?? "Unnamed",
+                totalAmount: totalAsDouble
+            )
+        }.sorted(by: { $0.totalAmount > $1.totalAmount })
+
+
+    }
+
+    func loadLineChartData(transactions: [Transaction], categories: [Category]) {
+        let expenses = transactions.filter { $0.isIncome == false }
+        let groupedByCategory = Dictionary(grouping: expenses, by: { $0.category?.id ?? UUID() })
+
+        monthlyCategoryData = groupedByCategory.compactMap { (categoryId, transactions) in
+            guard let category = categories.first(where: { $0.id == categoryId }) else { return nil }
+
+            var monthlyTotals: [String: Double] = [:]
+            for tx in transactions {
+                guard let date = tx.createdAt else { continue }
+                let monthKey = monthYearString(from: date)
+                let amount = (tx.amount ?? NSDecimalNumber.zero).doubleValue
+                monthlyTotals[monthKey, default: 0] += amount
+            }
+
+            return CategoryMonthlyData(
+                categoryId: categoryId,
+                categoryName: category.name ?? "Unnamed",
+                monthlyTotals: monthlyTotals
+            )
+        }
+    }
+
+    private func monthYearString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM yyyy"
+        return formatter.string(from: date)
+    }
+}
+
+    // MARK: - TEMP MOCK DATA LOADER
+//    private func loadMockData() {
+//        let food = CategoryDTO(id: UUID(), name: "Food")
+//        let travel = CategoryDTO(id: UUID(), name: "Travel")
+//        categories = [food, travel]
+//
+//        transactions = [
+//            TransactionDTO(id: UUID(), categoryId: food.id, amount: 2500, date: Date().addingTimeInterval(-5*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: food.id, amount: 1500, date: Date().addingTimeInterval(-25*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: travel.id, amount: 5000, date: Date().addingTimeInterval(-40*24*3600), type: .expense),
+//            TransactionDTO(id: UUID(), categoryId: travel.id, amount: 2000, date: Date(), type: .expense)
+//        ]
+//    }
+

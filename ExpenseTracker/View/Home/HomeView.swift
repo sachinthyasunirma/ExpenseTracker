@@ -68,12 +68,17 @@ struct HomeView: View {
                         
                         
                         if let selectedAccount = accountViewModel.selectedAccount {
-//                            AnalyticsView(accountId: selectedAccount.id ?? UUID())
+                            AnalyticsView(accountId: selectedAccount.id ?? UUID())
+                                .tag(3)
+//                            AnalyticsView()
 //                                .tag(3)
                         } else {
                             EmptyAnalyticsView()
                                 .tag(3)
                         }
+                        
+//                        AnalyticsView()
+//                            .tag(3)
                         
                         
                     }
