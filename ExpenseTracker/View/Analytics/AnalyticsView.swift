@@ -21,6 +21,7 @@ struct AnalyticsView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     // Time frame picker
                     VStack(alignment: .leading) {
+                        headerView
                         Text("Time Frame")
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -52,7 +53,6 @@ struct AnalyticsView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Analytics")
             .onAppear {
                 analyticsVM.loadAllData(accountId: accountId, startDate: startDate, endDate: endDate)
 
@@ -76,6 +76,19 @@ struct AnalyticsView: View {
 //            }
 
         
+    }
+    
+    private var headerView: some View {
+        HStack {
+            Text("Analytics")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.black)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 16)
     }
 }
 

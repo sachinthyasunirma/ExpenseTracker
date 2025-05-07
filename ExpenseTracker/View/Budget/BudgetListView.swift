@@ -42,6 +42,11 @@ struct BudgetListView: View {
                 await loadBudgets()
             }
         }
+        .onAppear {
+            Task {
+                await loadBudgets()
+            }
+        }
     }
     
     private var headerView: some View {
