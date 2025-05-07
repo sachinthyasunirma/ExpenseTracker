@@ -50,16 +50,16 @@ struct TransactionListView: View {
             
             VStack(spacing: 0) {
                 // Custom header
-                headerView
+                headerView.accessibilityIdentifier("TransactionListHeader")
                 
                 // Total summary card
                 if !viewModel.transactions.isEmpty {
-                    totalSummaryView
+                    totalSummaryView.accessibilityIdentifier("TotalSummaryCard")
                 }
                 
                 // Tab selector
                 if !viewModel.transactions.isEmpty {
-                    tabSelectorView
+                    tabSelectorView.accessibilityIdentifier("TransactionTypeTabs")
                 }
                 
                 // Main content
@@ -67,11 +67,11 @@ struct TransactionListView: View {
                     if viewModel.isLoading {
                         ProgressView()
                             .scaleEffect(1.5)
-                            .padding()
+                            .padding().accessibilityIdentifier("LoadingIndicator")
                     } else if viewModel.transactions.isEmpty {
-                        emptyStateView
+                        emptyStateView.accessibilityIdentifier("EmptyStateView")
                     } else {
-                        transactionListView
+                        transactionListView.accessibilityIdentifier("TransactionListScrollView")
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -138,6 +138,7 @@ struct TransactionListView: View {
             Text("Transactions")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.black)
+                .accessibilityIdentifier("TransactionListTitle")
             
             Spacer()
             
@@ -150,7 +151,7 @@ struct TransactionListView: View {
                     .frame(width: 36, height: 36)
                     .background(Color(hex: "45A87E"))
                     .cornerRadius(18)
-            }
+            }.accessibilityIdentifier("AddTransactionButton")
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
@@ -162,11 +163,13 @@ struct TransactionListView: View {
             Text("Total Amount")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.black)
+                .accessibilityIdentifier("TotalAmountLabel")
             
             HStack(alignment: .firstTextBaseline) {
                 Text(totalAmount)
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.black)
+                    .accessibilityIdentifier("TotalAmountValue")
             }
         }
         .padding(20)
@@ -191,7 +194,7 @@ struct TransactionListView: View {
                         Text(tab)
                             .font(.system(size: 16, weight: selectedTab == tab ? .semibold : .regular))
                             .foregroundColor(selectedTab == tab ? Color(hex: "45A87E") : .gray)
-                        
+                            .accessibilityIdentifier("Tab_\(tab)")
                         // Active indicator
                         Rectangle()
                             .fill(selectedTab == tab ? Color(hex: "45A87E") : Color.clear)
@@ -201,6 +204,7 @@ struct TransactionListView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .accessibilityIdentifier("TabButton_\(tab)")
             }
         }
         .padding(.horizontal, 20)
@@ -217,12 +221,14 @@ struct TransactionListView: View {
                 .font(.system(size: 60))
                 .foregroundColor(Color(hex: "E8F5F0"))
                 .padding()
+                .accessibilityIdentifier("EmptyStateIcon")
             
             Text("No transactions yet")
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
                 .padding(.bottom, 8)
+                .accessibilityIdentifier("EmptyStateTitle")
             
             Text("Add your first transaction to start tracking your finances")
                 .font(.body)
@@ -230,6 +236,7 @@ struct TransactionListView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
                 .padding(.bottom, 24)
+                .accessibilityIdentifier("EmptyStateMessage")
             
             Button(action: {
                 showingAddSheet = true
@@ -243,7 +250,7 @@ struct TransactionListView: View {
                     .cornerRadius(16)
                     .padding(.horizontal, 40)
             }
-            
+            .accessibilityIdentifier("EmptyStateAddButton")
             Spacer()
         }
     }
@@ -256,15 +263,17 @@ struct TransactionListView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.gray)
                         .padding(.top, 40)
+                        .accessibilityIdentifier("NoTransactionsMessage")
                 } else {
                     ForEach(filteredTransactions, id: \.id) { transaction in
                         TransactionRowView(transaction: transaction)
+                            .accessibilityIdentifier("TransactionRow_\(transaction.id?.uuidString ?? "unknown")")
                             .contextMenu {
                                 Button(role: .destructive, action: {
                                     deleteTransaction(transaction)
                                 }) {
                                     Label("Delete", systemImage: "trash")
-                                }
+                                }.accessibilityIdentifier("DeleteTransactionButton_\(transaction.id?.uuidString ?? "unknown")")
                             }
                     }
                 }
@@ -296,10 +305,11 @@ struct TransactionRowView: View {
             // Category icon with color background
             ZStack {
                 Circle()
-                    .fill(Color(hex: category?.color ?? "#45A87E")) // Safe unwrap
+                    .fill(Color(hex: category?.color ?? "#45A87E"))
                     .frame(width: 40, height: 40)
+                    .accessibilityIdentifier("TransactionCategoryColor_\(transaction.id?.uuidString ?? "unknown")")
                 
-                Image(systemName: category?.icon ?? "dollarsign.circle.fill") // Safe unwrap
+                Image(systemName: category?.icon ?? "dollarsign.circle.fill")
                     .foregroundColor(.white)
                     .font(.system(size: 18))
             }
@@ -339,6 +349,7 @@ struct TransactionRowView: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .accessibilityIdentifier("TransactionRowContainer_\(transaction.id?.uuidString ?? "unknown")")
     }
 }
 

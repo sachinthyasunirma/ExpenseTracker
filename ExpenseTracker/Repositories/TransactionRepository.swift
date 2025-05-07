@@ -55,7 +55,10 @@ class TransactionRepository: TransactionProtocol {
     func fetchTransactionsByAccountAndDateRange(accountId: UUID, startDate: Date, endDate:Date) async throws -> [Transaction] {
         try await context.perform{
             let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-            request.predicate = NSPredicate(format: "createdAt >= %@ AND createdAt <= %@", startDate as CVarArg, endDate as CVarArg)
+            request.predicate = NSPredicate(
+                        format: "account.id == %@ AND createdAt >= %@ AND createdAt <= %@",
+                        accountId as CVarArg, startDate as CVarArg, endDate as CVarArg
+            )
             return try self.context.fetch(request)
         }
     }
@@ -79,7 +82,12 @@ class TransactionRepository: TransactionProtocol {
     func fetchTransactionsByAccountAndMonthAndYear(accountId: UUID, month: Int, year: Int) async throws -> [Transaction] {
         try await context.perform{
             let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-            request.predicate = NSPredicate(format: "account.id == %@ AND createdAt CONTAINS %@", accountId as CVarArg, "\(year)-\(month)" as CVarArg)
+            let calendar = Calendar.current
+            let startOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1))!
+            let range = calendar.range(of: .day, in: .month, for: startOfMonth)!
+            let endOfMonth = calendar.date(byAdding: .day, value: range.count - 1, to: startOfMonth)!
+
+            request.predicate = NSPredicate(format: "account.id == %@ AND createdAt >= %@ AND createdAt <= %@", accountId as CVarArg, startOfMonth as CVarArg, endOfMonth as CVarArg)
             return try self.context.fetch(request)
         }
     }
@@ -95,7 +103,7 @@ class TransactionRepository: TransactionProtocol {
     func fetchTransaction(id: UUID) async throws -> Transaction? {
         try await context.perform{
             let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-            request.predicate = NSPredicate(format: "id == %d", id.uuidString)
+            request.predicate = NSPredicate(format: "id == %@", id.uuidString)
             request.fetchLimit = 1
             return try self.context.fetch(request).first
         }
